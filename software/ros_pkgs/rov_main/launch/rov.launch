@@ -1,3 +1,5 @@
 <launch>
 	<!-- TO IMPLEMENT -->
+	<include file="$(find rov_main)/launch/rov/camera.launch"/>
+	<include file="$(find rov_main)/launch/rov/topic_transport_senders.launch"/>
 </launch>

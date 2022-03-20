@@ -1,3 +1,9 @@
 <launch>
 	<!-- TO IMPLEMENT -->
+	<include file="$(find rov_main)/launch/ground_station/topic_transport_receivers.launch"/>
+	
+	<!-- view camera feed-->
+	<rosparam param="image">"cv_camera/image_raw"</rosparam>
+	<node pkg="image_view" name="image_view" type="image_view">
+
 </launch>

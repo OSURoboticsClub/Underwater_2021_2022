@@ -1,0 +1,10 @@
+<launch>
+
+	<group ns="cv_camera">
+		<rosparam param="cv_camera/deviceId"> 0 </rosparam>
+		<rosparam param="cv_camera/image_width"> 1280 </rosparam>
+		<rosparam param="cv_caemra/image_height"> 720 </rosparam>
+		<node pkg="cv_camera" name="cv_camera" type="cv_camera">
+	</group>
+
+</launch>
