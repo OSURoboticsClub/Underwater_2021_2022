@@ -4,6 +4,6 @@
 	
 	<!-- view camera feed-->
 	<rosparam param="image">"cv_camera/image_raw"</rosparam>
-	<node pkg="image_view" name="image_view" type="image_view">
+	<node pkg="image_view" name="image_view" type="image_view"></node>
 
 </launch>
