@@ -7,10 +7,6 @@ find_package(catkin REQUIRED COMPONENTS
   message_generation
 )
 
-catkin_package(
-     CATKIN_DEPENDS message_runtime
-)
-
 add_message_files(
   FILES
   gamepad.msg
@@ -19,4 +15,18 @@ add_message_files(
 include_directories(
 # include
   ${catkin_INCLUDE_DIRS}
+)
+
+catkin_install_python(
+  PROGRAMS src/controller.py
+  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
+
+generate_messages(
+  DEPENDENCIES
+  std_msgs
+)
+
+catkin_package(
+     CATKIN_DEPENDS message_runtime
 )
