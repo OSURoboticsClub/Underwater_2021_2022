@@ -1,6 +1,8 @@
 <launch>
+	<!--joystick node-->
+	
 	<!-- TO IMPLEMENT -->
-	<include file="$(find rov_main)/launch/ground_station/topic_transport_receivers.launch"/>
+	<include file="$(find rov_main)/launch/ground_station/topic_transport.launch"/>
 	
 	<!-- view camera feed-->
 	<rosparam param="image">"cv_camera/image_raw"</rosparam>
