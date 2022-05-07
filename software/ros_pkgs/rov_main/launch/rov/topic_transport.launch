@@ -10,7 +10,7 @@
         <param name="destination_port" value="17002" />
 
         <!-- Load the list of topics from a YAML file -->
-        <rosparam command="load" file="$(find rov_main)/launch/rov_sent_topic.yaml" />
+        <rosparam command="load" file="$(find rov_main)/launch/rov_send_topic.yaml" />
 
         <!-- If bidirectional traffic over a topic is expected, fill this parameter.
              See details in bidirectional_topics.launch -->
