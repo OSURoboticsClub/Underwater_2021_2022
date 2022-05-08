@@ -1,2 +1,2 @@
 topics:
- - name: "/cv_camera"
+ - name: "/cv_camera/cam/image_raw"
