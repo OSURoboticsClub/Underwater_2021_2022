@@ -1,12 +1,18 @@
 <launch>
 	<!--joystick node-->
+	<arg name="joy_connected" default="true" />
+	<node if="$(arg joy_connected)" pkg="rov_control" name="joystick" type="controller.py"></node>
 	
-	<!-- TO IMPLEMENT -->
-	<include file="$(find rov_main)/launch/ground_station/topic_transport.launch"/>
+
+	
+	<!-- default target is 10.0.0.2 -->
+	<include file="$(find rov_main)/launch/ground_station/topic_transport.launch">
+			<arg name="target" value="localhost"/> 
+	</include>
 	
 	<!-- view camera feed--> 
 	<node pkg="image_view" name="image_view" type="image_view">
-		<remap from="image" to="rov_cam" />
+		<remap from="image" to="/rov_cam" />
 	</node>
 
 </launch>

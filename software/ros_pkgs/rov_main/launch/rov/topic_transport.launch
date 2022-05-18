@@ -1,8 +1,7 @@
 <launch>
-    <arg name="target" default="10.0.0.1" />
+    <arg name="target"/>
     <arg name="allow_bidirectional" default="true" />
 
-    <!-- The TCP sender node -->
     <node name="rov_sender" pkg="nimbro_topic_transport" type="tcp_sender" output="screen">
 
         <!-- The destination host name or IP address -->

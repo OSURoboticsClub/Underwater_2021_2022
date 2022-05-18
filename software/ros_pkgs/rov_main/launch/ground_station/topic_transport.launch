@@ -1,18 +1,17 @@
 <launch>
-	<arg name="target" default="10.0.0.2" />
+	<arg name="target"/>
 		<arg name="allow_bidirectional" default="true" />
 
-		<!-- The TCP sender node -->
-		<!-- <node name="tcp_sender_machine1" pkg="nimbro_topic_transport" type="udp_sender" output="screen">
+		<node name="gs_sender" pkg="nimbro_topic_transport" type="tcp_sender" output="screen">
 
 			<param name="destination_addr" value="$(arg target)" />
 			<param name="destination_port" value="17001" />
 
 			<rosparam command="load" file="$(find rov_main)/launch/gs_send_topic.yaml" />
 
-			<rosparam param="ignored_publishers" if="$(arg allow_bidirectional)">["/tcp_receiver_machine1"]</rosparam>
+			<rosparam param="ignored_publishers" if="$(arg allow_bidirectional)">["/gs_receiver"]</rosparam>
 			<rosparam param="ignored_publishers" unless="$(arg allow_bidirectional)">[]</rosparam>
-		</node> -->
+		</node>
 
 		<node name="gs_receiver" pkg="nimbro_topic_transport" type="tcp_receiver" output="screen">
 			<param name="port" value="17002" />
