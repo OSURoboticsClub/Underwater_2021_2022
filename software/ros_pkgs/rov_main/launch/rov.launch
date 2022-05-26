@@ -1,5 +1,9 @@
 <launch>
-	<!-- TO IMPLEMENT -->
+	<!--Set up camera-->
 	<include file="$(find rov_main)/launch/rov/camera.launch"/>
-	<include file="$(find rov_main)/launch/rov/topic_transport_senders.launch"/>
+
+	<!-- default target is 10.0.0.1 -->
+	<include file="$(find rov_main)/launch/rov/topic_transport.launch">
+		<arg name="target" value="localhost"/>
+	</include>
 </launch>

@@ -1,0 +1,24 @@
+<launch>
+	<arg name="target"/>
+		<arg name="allow_bidirectional" default="true" />
+
+		<node name="gs_sender" pkg="nimbro_topic_transport" type="tcp_sender" output="screen">
+
+			<param name="destination_addr" value="$(arg target)" />
+			<param name="destination_port" value="17001" />
+
+			<rosparam command="load" file="$(find rov_main)/launch/gs_send_topic.yaml" />
+
+			<rosparam param="ignored_publishers" if="$(arg allow_bidirectional)">["/gs_receiver"]</rosparam>
+			<rosparam param="ignored_publishers" unless="$(arg allow_bidirectional)">[]</rosparam>
+		</node>
+
+		<node name="gs_receiver" pkg="nimbro_topic_transport" type="tcp_receiver" output="screen">
+			<param name="port" value="17002" />
+
+			<!-- Remap topics so that sender & receiver do not clash if run on the
+			same machine. This is not necessary in a typical setup :-)
+			-->
+			<remap from="/cv_camera/cam/image_raw" to="/rov_cam"/>
+		</node>
+</launch>

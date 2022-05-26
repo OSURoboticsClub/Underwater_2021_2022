@@ -2,9 +2,13 @@
 
 	<group ns="cv_camera">
 		<rosparam param="cv_camera/deviceId"> 0 </rosparam>
-		<rosparam param="cv_camera/image_width"> 1280 </rosparam>
+		<rosparam param="cv_camera/image_width"> 720 </rosparam>
 		<rosparam param="cv_caemra/image_height"> 720 </rosparam>
-		<node pkg="cv_camera" name="cv_camera" type="cv_camera">
+		<node pkg="cv_camera" name="cam" type="cv_camera_node">
+<!-- 			<param name="deviceID" value="0"/>
+			<param name="image_width" value="1280"/>
+			<param name="image_height" value="720"/> -->
+		</node>
 	</group>
 
 </launch>

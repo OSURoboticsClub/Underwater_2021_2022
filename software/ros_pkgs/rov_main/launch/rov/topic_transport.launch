@@ -1,0 +1,28 @@
+<launch>
+    <arg name="target"/>
+    <arg name="allow_bidirectional" default="true" />
+
+    <node name="rov_sender" pkg="nimbro_topic_transport" type="tcp_sender" output="screen">
+
+        <!-- The destination host name or IP address -->
+        <param name="destination_addr" value="$(arg target)" />
+        <param name="destination_port" value="17002" />
+
+        <!-- Load the list of topics from a YAML file -->
+        <rosparam command="load" file="$(find rov_main)/launch/rov_send_topic.yaml" />
+
+        <!-- If bidirectional traffic over a topic is expected, fill this parameter.
+             See details in bidirectional_topics.launch -->
+        <rosparam param="ignored_publishers" if="$(arg allow_bidirectional)">["/rov_receiver"]</rosparam>
+        <rosparam param="ignored_publishers" unless="$(arg allow_bidirectional)">[]</rosparam>
+    </node>
+
+    <node name="rov_receiver" pkg="nimbro_topic_transport" type="tcp_receiver" output="screen">
+        <param name="port" value="17001" />
+
+        <!-- Remap topics so that sender & receiver do not clash if run on the
+          same machine. This is not necessary in a typical setup :-)
+         -->
+        <remap from="/cv_camera/cv_camera/image_raw" to="/recv/cv_camera/cv_camera/image_raw" />
+    </node>
+</launch>
