@@ -1,15 +1,20 @@
 from smbus2 import SMBus, i2c_msg
+#import smbus
 import rospy
 from rospy.numpy_msg import numpy_msg
 from rospy_tutorials.msg import Floats
+
+#To-do: figure out if would improve performance to limit import to just datatype
+import numpy as np
 #from sensor_msgs.msg import Joy
 
 from rov_control.msg import gamepad
 msg = gamepad()
 
-bus = "/dev/i2c-1"
+motorControllAddr = 80
 
 def callback(data -> gamepad):
+    #TO-DO: normalize
     DPadVert = data.Axis[0]
     RJoyHorz = data.Axis[1]
     RJoyVert = data.Axis[2]
@@ -33,23 +38,48 @@ def callback(data -> gamepad):
 
 
 """ 
-1.↗️   F     2.↖️
+0.↗️   F     1.↖️
 
 
-6.o          3.o
+5.o          2.o
 
 
-5.↘️          4.↙️
+4.↘️         3.↙️
 
 
 """
-
+    motors = [0, 0, 0, 0, 0, 0]
     #left joystick X is roll
-    if(LJoyHorz > 0):
+    if(float(f'{LJoyHorz:.2f}') != 0.0):
         #Left motor forwards, Right motor downwards
+        motors[5] = LJoyHorz
+        motors[2] = -LJoyHorz
+
+    #left joystick Y would be pitch, don't believe we can change pitch though
+
+    #right joystick X is yaw
+    if(float(f'{RJoyHorz:.2f}') != 0.0):
+        motors[1] = -RJoyHorz
+        motors[4] = -RJoyHorz
+        motors[0] = RJoyHorz
+        motors[3] = RJoyHorz
+
+
+
+    #Float 16 loses percision but means less data sending, so overall worth it.
+    values = np.array(motors, dtype=np.float16)
+
+    with SMBus(1) as bus:
+        msg = i2c_msg.write(motorControllAddr, values)
+        bus.i2c_rdwr(msg)
+
+    if A:
+        Toggle_Gripper()
 
     return
 
+def Toggle_Gripper():
+    raise NotImplementedError() 
 
 def listener():
 
