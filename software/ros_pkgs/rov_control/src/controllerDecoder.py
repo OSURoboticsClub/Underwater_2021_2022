@@ -59,10 +59,22 @@ def callback(data -> gamepad):
 
     #right joystick X is yaw
     if(float(f'{RJoyHorz:.2f}') != 0.0):
-        motors[1] = -RJoyHorz
-        motors[4] = -RJoyHorz
-        motors[0] = RJoyHorz
-        motors[3] = RJoyHorz
+        motors[1] += -RJoyHorz
+        motors[4] += -RJoyHorz
+        motors[0] += RJoyHorz
+        motors[3] += RJoyHorz
+
+    #right joystick Y is forward/backwards
+    if(float(f'{RJoyVert:.2f}') != 0.0):
+        motors[0] += RJoyVert
+        motors[1] += RJoyVert
+        motors[3] += -RJoyVert
+        motors[4] += -RJoyVert
+
+    #triggers control altitude
+    motors[2] += RBumper - LBumper
+    motors[5] += RBumper - LBumper
+
 
 
 
