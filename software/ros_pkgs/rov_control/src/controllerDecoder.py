@@ -35,25 +35,23 @@ def callback(data -> gamepad):
     Y   = data.Buttons[8]
     X   = data.Buttons[9]
     Select = data.Buttons[10]
+    """ 
+    0.↗️   F     1.↖️
 
 
-""" 
-0.↗️   F     1.↖️
+    5.o          2.o
 
 
-5.o          2.o
+    4.↘️         3.↙️
 
 
-4.↘️         3.↙️
-
-
-"""
+    """
     motors = [0, 0, 0, 0, 0, 0]
     #left joystick X is roll
     if(float(f'{LJoyHorz:.2f}') != 0.0):
         #Left motor forwards, Right motor downwards
-        motors[5] = LJoyHorz
-        motors[2] = -LJoyHorz
+        motors[5] += LJoyHorz
+        motors[2] += -LJoyHorz
 
     #left joystick Y would be pitch, don't believe we can change pitch though
 
@@ -75,11 +73,9 @@ def callback(data -> gamepad):
     motors[2] += RBumper - LBumper
     motors[5] += RBumper - LBumper
 
-
-
-
-    #Float 16 loses percision but means less data sending, so overall worth it.
-    values = np.array(motors, dtype=np.float16)
+    #Byte loses percision but means less data sending, so overall worth it.
+    #To-do, ensure separately that this will work.
+    values = np.array(motors, dtype=np.byte)
 
     with SMBus(1) as bus:
         msg = i2c_msg.write(motorControllAddr, values)
