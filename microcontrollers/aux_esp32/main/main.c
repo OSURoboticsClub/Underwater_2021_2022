@@ -54,6 +54,14 @@ static esp_err_t i2c_slave_init(void){
     return i2c_driver_install(i2c_slave_port, conf_slave.mode, 51, 4, 0);
 }
 
+int8_t sign_byte(uint8_t x)
+{
+  return ((x >= (1 << 7))
+          ? -(UINT8_MAX - x + 1)
+          : x);
+}
+
+
 void app_main(void)
 {
     motor_control_context motors[6] = {
@@ -65,56 +73,52 @@ void app_main(void)
         {1, 2, MCPWM2A, 2, MCPWM2B, 15}
     };
 
-    ESP_ERROR_CHECK(mcpwm_gpio_init(motors[0].mcpwm_num, motors[0].genA, BDC_MCPWM_GENA_GPIO_NUM));
-    ESP_ERROR_CHECK(mcpwm_gpio_init(BDC_MCPWM_UNIT, MCPWM0B, BDC_MCPWM_GENB_GPIO_NUM));
+    mcpwm_config_t pwm_config = {
+        .frequency = 1500,
+        .cmpr_a = 0,
+        .cmpr_b = 0,
+        .counter_mode = MCPWM_UP_COUNTER,
+        .duty_mode = MCPWM_DUTY_MODE_0
+    };
 
-    ESP_ERROR_CHECK(mcpwm_gpio_init(BDC_MCPWM_UNIT, MCPWM0A, BDC_MCPWM_GENA_GPIO_NUM));
-    ESP_ERROR_CHECK(mcpwm_gpio_init(BDC_MCPWM_UNIT, MCPWM0B, BDC_MCPWM_GENB_GPIO_NUM));
+    for(int i = 0; i < 6; i++){
+        ESP_ERROR_CHECK(mcpwm_gpio_init(motors[i].mcpwm_num, motors[i].genA, motors[i].genA_gpio_num));
+        ESP_ERROR_CHECK(mcpwm_gpio_init(motors[i].mcpwm_num, motors[i].genB, motors[i].genB_gpio_num));
+        ESP_ERROR_CHECK(mcpwm_init(motors[i].mcpwm_num, motors[i].timer_num, &pwm_config));
+    }
 
-    ESP_ERROR_CHECK(mcpwm_gpio_init(BDC_MCPWM_UNIT, MCPWM0A, BDC_MCPWM_GENA_GPIO_NUM));
-    ESP_ERROR_CHECK(mcpwm_gpio_init(BDC_MCPWM_UNIT, MCPWM0B, BDC_MCPWM_GENB_GPIO_NUM));
 
-    ESP_ERROR_CHECK(mcpwm_gpio_init(BDC_MCPWM_UNIT, MCPWM0A, BDC_MCPWM_GENA_GPIO_NUM));
-    ESP_ERROR_CHECK(mcpwm_gpio_init(BDC_MCPWM_UNIT, MCPWM0B, BDC_MCPWM_GENB_GPIO_NUM));
+    
 
-    ESP_ERROR_CHECK(mcpwm_gpio_init(BDC_MCPWM_UNIT, MCPWM0A, BDC_MCPWM_GENA_GPIO_NUM));
-    ESP_ERROR_CHECK(mcpwm_gpio_init(BDC_MCPWM_UNIT, MCPWM0B, BDC_MCPWM_GENB_GPIO_NUM));
-
-    ESP_ERROR_CHECK(mcpwm_gpio_init(BDC_MCPWM_UNIT, MCPWM0A, BDC_MCPWM_GENA_GPIO_NUM));
-    ESP_ERROR_CHECK(mcpwm_gpio_init(BDC_MCPWM_UNIT, MCPWM0B, BDC_MCPWM_GENB_GPIO_NUM));
-
-    uint8_t * data;
+    uint8_t * data = NULL;
+    int8_t * decoded_data = NULL;
     size_t dataSize = 6;
     ESP_ERROR_CHECK(i2c_slave_init());
 
     while(true){
-        for(int i = 0; i < dataSize; i++)
+        for(int i = 0; i < dataSize; i++){
             data[i] = NULL;
+            decoded_data[i] = NULL;
+        }
         i2c_slave_read_buffer(I2C_SLAVE_PORT, data, dataSize, 1000 / portTICK_PERIOD_MS);
-        printf("Hello world!\n");
+
+        for(int i = 0; i < dataSize; i++){
+            if(data[i] != NULL)
+                decoded_data[i] = sign_byte(data[i]);
+            if(data[i] != NULL && decoded_data[i] > 0){
+                float duty_cycle = decoded_data[i] / 127.0;
+                mcpwm_set_signal_low(motors[i].mcpwm_num, motors[i].timer_num, motors[i].genB);
+                mcpwm_set_duty(motors[i].mcpwm_num, motors[i].timer_num, motors[i].genA, duty_cycle);
+                mcpwm_set_duty_type(motors[i].mcpwm_num, motors[i].timer_num, motors[i].genA, MCPWM_DUTY_MODE_0);
+            } else if (data[i] != NULL && decoded_data[i] < 0){
+                float duty_cycle = -decoded_data[i] / 128.0;
+                mcpwm_set_signal_low(motors[i].mcpwm_num, motors[i].timer_num, motors[i].genA);
+                mcpwm_set_duty(motors[i].mcpwm_num, motors[i].timer_num, motors[i].genB, duty_cycle);
+                mcpwm_set_duty_type(motors[i].mcpwm_num, motors[i].timer_num, motors[i].genB, MCPWM_DUTY_MODE_0);
+            } else {
+                mcpwm_set_signal_low(motors[i].mcpwm_num, motors[i].timer_num, motors[i].genA);
+                mcpwm_set_signal_low(motors[i].mcpwm_num, motors[i].timer_num, motors[i].genB);
+            }
+        }
     }
-
-    /* Print chip information */
-    esp_chip_info_t chip_info;
-    esp_chip_info(&chip_info);
-    printf("This is %s chip with %d CPU core(s), WiFi%s%s, ",
-           CONFIG_IDF_TARGET,
-           chip_info.cores,
-           (chip_info.features & CHIP_FEATURE_BT) ? "/BT" : "",
-           (chip_info.features & CHIP_FEATURE_BLE) ? "/BLE" : "");
-
-    printf("silicon revision %d, ", chip_info.revision);
-
-    printf("%uMB %s flash\n", spi_flash_get_chip_size() / (1024 * 1024),
-           (chip_info.features & CHIP_FEATURE_EMB_FLASH) ? "embedded" : "external");
-
-    printf("Minimum free heap size: %d bytes\n", esp_get_minimum_free_heap_size());
-
-    for (int i = 10; i >= 0; i--) {
-        printf("Restarting in %d seconds...\n", i);
-        vTaskDelay(1000 / portTICK_PERIOD_MS);
-    }
-    printf("Restarting now.\n");
-    fflush(stdout);
-    esp_restart();
 }

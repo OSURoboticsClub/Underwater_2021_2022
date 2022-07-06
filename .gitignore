@@ -1,2 +1,5 @@
 __pycache__
 .dev
+microcontrollers/aux_esp32/.vscode
+microcontrollers/aux_esp32/build
+sdkconfig
