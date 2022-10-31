@@ -26,4 +26,4 @@ catkin_make
 
 source devel/setup.bash
 
-exit 0
+return
