@@ -1,4 +1,9 @@
 <launch>
+
+	<!--Set up Control decoder-->
+	<arg name="joy_connected" default="true" />
+	<node if="$(arg joy_connected)" pkg="rov_control" name="joystickDecoder" type="controllerDecoder.py"></node>
+
 	<!--Set up camera-->
 	<include file="$(find rov_main)/launch/rov/camera.launch"/>
 
