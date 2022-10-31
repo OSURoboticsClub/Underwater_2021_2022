@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 from smbus2 import SMBus, i2c_msg
 #import smbus
 import rospy
@@ -11,7 +12,7 @@ import numpy as np
 from rov_control.msg import gamepad
 msg = gamepad()
 
-motorControllAddr = 80
+motorControllAddr = 0x50
 
 def callback(data -> gamepad):
     #TO-DO: normalize
@@ -36,13 +37,13 @@ def callback(data -> gamepad):
     X   = data.Buttons[9]
     Select = data.Buttons[10]
     """ 
-    0.↗️   F     1.↖️
+    0.↗   F     1.↖
 
 
     5.o          2.o
 
 
-    4.↘️         3.↙️
+    4.↘         3.↙
 
 
     """
@@ -73,9 +74,11 @@ def callback(data -> gamepad):
     motors[2] += RBumper - LBumper
     motors[5] += RBumper - LBumper
 
+    fmotors = [int(i)*255 for i in motors]
+
     #Byte loses percision but means less data sending, so overall worth it.
     #To-do, ensure separately that this will work.
-    values = np.array(motors, dtype=np.byte)
+    values = np.array(fmotors, dtype=np.byte)
 
     with SMBus(1) as bus:
         msg = i2c_msg.write(motorControllAddr, values)
@@ -98,7 +101,7 @@ def listener():
     # run simultaneously.
     rospy.init_node('listener', anonymous=True)
 
-    rospy.Subscriber("chatter", gamepad, callback)
+    rospy.Subscriber("gamepad", gamepad, callback)
 
     # spin() simply keeps python from exiting until this node is stopped
     rospy.spin()
