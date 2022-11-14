@@ -9,6 +9,6 @@
 
 	<!-- default target is 10.0.0.1 -->
 	<include file="$(find rov_main)/launch/rov/topic_transport.launch">
-		<arg name="target" value="localhost"/>
+		<arg name="target" default="10.0.0.1"/>
 	</include>
 </launch>

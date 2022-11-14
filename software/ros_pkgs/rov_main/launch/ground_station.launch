@@ -7,7 +7,7 @@
 	
 	<!-- default target is 10.0.0.2 -->
 	<include file="$(find rov_main)/launch/ground_station/topic_transport.launch">
-			<arg name="target" value="localhost"/> 
+			<arg name="target" default="10.0.0.2"/> 
 	</include>
 	
 	<!-- view camera feed--> 
