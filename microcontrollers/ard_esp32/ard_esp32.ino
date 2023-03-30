@@ -1,5 +1,10 @@
+#include "config.h"
+
 #include <ESP32Servo.h>
+#include <Adafruit_LSM9DS1.h>
+#include <Adafruit_Sensor.h>
 #include "ESC.h"
+#include "SPI.h"
 #include "Wire.h"
 
 /********** I2C COMMS **********/
@@ -8,6 +13,14 @@
 #define SDA_0 21
 #define SCL_0 22
 
+
+#define LSM9DS1_SCK A5
+#define LSM9DS1_MISO 12
+#define LSM9DS1_MOSI A4
+#define LSM9DS1_XGCS 8
+#define LSM9DS1_MCS 5
+
+//1E, 6B
 
 #define I2C_FREQ 400000 // specifies clockspeed in bts
 #define I2C_DEV_ADDR 0x50 // slave address
@@ -36,8 +49,39 @@ ESC motors[] = {
   ESC(MOTOR_3, MOTOR_DIR_SUPPORT)
 };
 
+Adafruit_LSM9DS1 lsm = Adafruit_LSM9DS1();
 
 unsigned char cBuff[CONTROLLER_BUFFSIZE];
+
+void setup_gyro(){
+  //Adafruit_LSM9DS1 lsm = Adafruit_LSM9DS1();  // i2c sensor
+  if(!lsm.begin())
+  {
+    /* There was a problem detecting the LSM9DS1 ... check your connections */
+    Serial.print(F("Ooops, no LSM9DS1 detected ... Check your wiring!"));
+    while(1);
+  }
+
+  // 1.) Set the accelerometer range
+  lsm.setupAccel(lsm.LSM9DS1_ACCELRANGE_2G);
+  //lsm.setupAccel(lsm.LSM9DS1_ACCELRANGE_4G);
+  //lsm.setupAccel(lsm.LSM9DS1_ACCELRANGE_8G);
+  //lsm.setupAccel(lsm.LSM9DS1_ACCELRANGE_16G);
+  
+  // 2.) Set the magnetometer sensitivity
+  lsm.setupMag(lsm.LSM9DS1_MAGGAIN_4GAUSS);
+  //lsm.setupMag(lsm.LSM9DS1_MAGGAIN_8GAUSS);
+  //lsm.setupMag(lsm.LSM9DS1_MAGGAIN_12GAUSS);
+  //lsm.setupMag(lsm.LSM9DS1_MAGGAIN_16GAUSS);
+
+  // 3.) Setup the gyroscope
+  lsm.setupGyro(lsm.LSM9DS1_GYROSCALE_245DPS);
+  //lsm.setupGyro(lsm.LSM9DS1_GYROSCALE_500DPS);
+  //lsm.setupGyro(lsm.LSM9DS1_GYROSCALE_2000DPS);
+
+  sensors_event_t accel, mag, gyro, temp;
+  lsm.getEvent(&accel, &mag, &gyro, &temp);
+}
 
 void onRequest(){
 //  Wire.print(i++);
@@ -93,26 +137,41 @@ void onReceive(int len){
 
 void setup() 
 {
-  Serial.begin(115200);
+
+  
+  Serial.begin(9600);
+
+  while (!Serial) {
+    delay(1); // will pause Zero, Leonardo, etc until serial console opens
+  }
+
+  Serial.println("Serial Init"); 
+
+  #if defined(RUN_GYRO)
+     setup_gyro();
+  #endif
+
 
   // arm all of the motors
-  for (int i = 0; i < AVAILABLE_MOTORS; i++) {
-    motors[i].arm();
-  }
-  
-  delay(500); // short time for arming
-  Serial.println("Armed the controller");
+  #if defined(RUN_MOTORS)
+    for (int i = 0; i < AVAILABLE_MOTORS; i++) {
+      motors[i].arm();
+    }
+    
+    delay(500); // short time for arming
+    Serial.println("Armed the controller");
 
-  // handle requests
-  I2C_0.begin((uint8_t)I2C_DEV_ADDR, SDA_0, SCL_0, I2C_FREQ);
-  I2C_0.onReceive(onReceive);
-  I2C_0.onRequest(onRequest);
+    // handle requests
+    I2C_0.begin((uint8_t)I2C_DEV_ADDR, SDA_0, SCL_0, I2C_FREQ);
+    I2C_0.onReceive(onReceive);
+    I2C_0.onRequest(onRequest);
 
-  // set motors to initially be disabled
-  for (int i = 0; i < AVAILABLE_MOTORS; i++) {
-    motors[i].setDirection(ESC::FORWARD);
-    motors[i].setSpeed(0);
-  }
+    // set motors to initially be disabled
+    for (int i = 0; i < AVAILABLE_MOTORS; i++) {
+      motors[i].setDirection(ESC::FORWARD);
+      motors[i].setSpeed(0);
+    }
+  #endif
 }
 
 void loop() 
@@ -135,4 +194,28 @@ void loop()
 //    esc.setDirection(ESC::BACKWARD);
 //    esc.setSpeed(400);
 //    delay(1000);
+
+  #if defined(RUN_GYRO)
+  lsm.read();  /* ask it to read in the data */ 
+
+  //Get a new sensor event
+  sensors_event_t a, m, g, temp;
+
+  lsm.getEvent(&a, &m, &g, &temp); 
+
+  Serial.print("Accel X: "); Serial.print(a.acceleration.x); Serial.print(" m/s^2");
+  Serial.print("\tY: "); Serial.print(a.acceleration.y);     Serial.print(" m/s^2 ");
+  Serial.print("\tZ: "); Serial.print(a.acceleration.z);     Serial.println(" m/s^2 ");
+
+  Serial.print("Mag X: "); Serial.print(m.magnetic.x);   Serial.print(" uT");
+  Serial.print("\tY: "); Serial.print(m.magnetic.y);     Serial.print(" uT");
+  Serial.print("\tZ: "); Serial.print(m.magnetic.z);     Serial.println(" uT");
+
+  Serial.print("Gyro X: "); Serial.print(g.gyro.x);   Serial.print(" rad/s");
+  Serial.print("\tY: "); Serial.print(g.gyro.y);      Serial.print(" rad/s");
+  Serial.print("\tZ: "); Serial.print(g.gyro.z);      Serial.println(" rad/s");
+
+  Serial.println();
+  delay(200);
+  #endif
 } 
